@@ -1,74 +1,38 @@
-import React from 'react';
+import React, {useState, useCallback} from 'react';
 import {
   View,
   Text,
   Image,
-  FlatList,
   StyleSheet,
   SafeAreaView,
   StatusBar,
   useColorScheme,
+  Button,
+  Alert,
 } from 'react-native';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
-
-const user = {
-  name: 'John Doe',
-  email: 'john.doe@example.com',
-  avatar: 'https://www.gravatar.com/avatar/2c7d99fe281a137a2633b446917ab9e?d=mp',
-};
-
-const favoriteEvents = [
-  {
-    id: '1',
-    title: 'Summer Music Festival',
-    date: '2025-08-20',
-    location: 'Central Park, NYC',
-  },
-  {
-    id: '2',
-    title: 'Art & Wine Night',
-    date: '2025-09-05',
-    location: 'Downtown Gallery',
-  },
-  {
-    id: '3',
-    title: 'Tech Conference 2025',
-    date: '2025-10-15',
-    location: 'Convention Center',
-  },
-  {
-    id: '4',
-    title: 'Local Charity Run',
-    date: '2025-11-01',
-    location: 'City Waterfront',
-  },
-];
-
-type Event = (typeof favoriteEvents)[0];
-
-const EventCard = ({item}: {item: Event}) => {
-  const isDarkMode = useColorScheme() === 'dark';
-  const cardStyle = {
-    backgroundColor: isDarkMode ? Colors.dark : Colors.white,
-  };
-  const textStyle = {
-    color: isDarkMode ? Colors.light : Colors.dark,
-  };
-  const titleStyle = {
-    color: isDarkMode ? Colors.white : Colors.black,
-  };
-
-  return (
-    <View style={[styles.card, cardStyle]}>
-      <Text style={[styles.cardTitle, titleStyle]}>{item.title}</Text>
-      <Text style={textStyle}>Date: {item.date}</Text>
-      <Text style={textStyle}>Location: {item.location}</Text>
-    </View>
-  );
-};
+import auth from '@react-native-firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useFocusEffect} from '@react-navigation/native';
+import {type Event} from '../components/EventCard';
+import EventsList from '../components/EventsList';
 
 const Profile = () => {
   const isDarkMode = useColorScheme() === 'dark';
+  const [favorites, setFavorites] = useState<Event[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const getFavorites = async () => {
+        const favoritesFromStorage = await AsyncStorage.getItem('favorites');
+        if (favoritesFromStorage) {
+          setFavorites(JSON.parse(favoritesFromStorage));
+        }
+      };
+      getFavorites();
+    }, []),
+  );
+
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
@@ -78,6 +42,17 @@ const Profile = () => {
   const titleStyle = {
     color: isDarkMode ? Colors.white : Colors.black,
   };
+  const user = auth().currentUser;
+
+  const handleLogout = async () => {
+    try {
+      await auth().signOut();
+      console.log('User signed out');
+    } catch (error) {
+      console.error('Logout error:', error);
+      Alert.alert('Error', 'Failed to logout');
+    }
+  };
 
   return (
     <SafeAreaView style={[styles.container, backgroundStyle]}>
@@ -86,19 +61,19 @@ const Profile = () => {
         backgroundColor={backgroundStyle.backgroundColor}
       />
       <View style={styles.profileSection}>
-        <Image source={{uri: user.avatar}} style={styles.avatar} />
-        <Text style={[styles.name, titleStyle]}>{user.name}</Text>
-        <Text style={textStyle}>{user.email}</Text>
-      </View>
-      <View style={styles.favoritesSection}>
-        <Text style={[styles.favoritesTitle, titleStyle]}>Favourites</Text>
-        <FlatList
-          data={favoriteEvents}
-          renderItem={({item}) => <EventCard item={item} />}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContainer}
+        <Image
+          source={{
+            uri: user?.photoURL || 'https://www.gravatar.com/avatar/?d=mp',
+          }}
+          style={styles.avatar}
         />
+        <Text style={[styles.name, titleStyle]}>{user?.displayName}</Text>
+        <Text style={[textStyle, styles.email]}>{user?.email}</Text>
+        <View style={styles.logoutButton}>
+          <Button title="Logout" onPress={handleLogout} color="#FF3B30" />
+        </View>
       </View>
+      <EventsList title="Favourites" events={favorites} />
     </SafeAreaView>
   );
 };
@@ -122,6 +97,14 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 22,
     fontWeight: 'bold',
+    marginBottom: 4,
+    textAlign: 'left',
+  },
+  email: {
+    textAlign: 'left',
+  },
+  logoutButton: {
+    marginTop: 16,
   },
   favoritesSection: {
     flex: 1,

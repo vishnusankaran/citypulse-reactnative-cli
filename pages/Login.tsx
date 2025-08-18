@@ -7,19 +7,13 @@ import {
   StatusBar,
   useColorScheme,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
-import {useNavigation} from '@react-navigation/native';
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-
-type RootStackParamList = {
-  Home: undefined;
-  // add other routes here if needed
-};
+import auth from '@react-native-firebase/auth';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 
 const Login = () => {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const isDarkMode = useColorScheme() === 'dark';
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
@@ -28,8 +22,24 @@ const Login = () => {
     color: isDarkMode ? Colors.white : Colors.black,
   };
 
-  const handleLogin = () => {
-    navigation.navigate('Home');
+  const signInWithGoogle = async () => {
+    try {
+      // Check if your device supports Google Play
+      await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
+
+      // Get the users ID token
+      const {idToken} = await GoogleSignin.signIn();
+
+      // Create a Google credential with the token
+      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+
+      // Sign-in the user with the credential
+      await auth().signInWithCredential(googleCredential);
+      console.log('User signed in with Google');
+    } catch (error: Error | any) {
+      console.error('Google sign in error:', error);
+      Alert.alert('Error', error?.message);
+    }
   };
 
   return (
@@ -40,12 +50,12 @@ const Login = () => {
       />
       <View style={styles.loginContainer}>
         <Text style={[styles.title, titleStyle]}>CityPulse</Text>
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <TouchableOpacity style={styles.button} onPress={signInWithGoogle}>
           <Text style={styles.buttonText}>Sign in with Google</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        {/* <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Sign in with Apple</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </SafeAreaView>
   );

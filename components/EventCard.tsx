@@ -1,18 +1,43 @@
 import React from 'react';
-import {Text, useColorScheme, View, StyleSheet} from 'react-native';
+import {
+  Text,
+  useColorScheme,
+  View,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  I18nManager,
+} from 'react-native';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
+import {useNavigation} from '@react-navigation/native';
 
-type Event = {
+export type Event = {
   id: string;
-  title: string;
-  date: string;
-  location: string;
+  name: string;
+  images?: {
+    url: string;
+    ratio?: string;
+  }[];
+  dates: {
+    start: {
+      localDate: string;
+    };
+  };
+  _embedded?: {
+    venues: {
+      name: string;
+    }[];
+  };
 };
 
 const EventCard = ({item}: {item: Event}) => {
   const isDarkMode = useColorScheme() === 'dark';
+  const navigation = useNavigation();
   const cardStyle = {
     backgroundColor: isDarkMode ? Colors.dark : Colors.white,
+  };
+  const cardContentStyle = {
+    alignItems: I18nManager.isRTL ? 'end' : 'start',
   };
   const textStyle = {
     color: isDarkMode ? Colors.light : Colors.dark,
@@ -21,12 +46,26 @@ const EventCard = ({item}: {item: Event}) => {
     color: isDarkMode ? Colors.white : Colors.black,
   };
 
+  const image = item.images?.find(img => img.ratio === '16_9');
+
   return (
-    <View style={[styles.card, cardStyle]}>
-      <Text style={[styles.cardTitle, titleStyle]}>{item.title}</Text>
-      <Text style={textStyle}>Date: {item.date}</Text>
-      <Text style={textStyle}>Location: {item.location}</Text>
-    </View>
+    <TouchableOpacity
+      onPress={() => navigation.navigate('EventDetails', {item})}>
+      <View style={[styles.card, cardStyle]}>
+        {image && <Image source={{uri: image.url}} style={styles.cardImage} />}
+        <View style={[styles.cardContent, cardContentStyle]}>
+          <Text style={[styles.cardTitle, titleStyle]}>
+            {item.name || 'No Name'}
+          </Text>
+          <Text style={textStyle}>
+            Date: {item.dates?.start?.localDate || 'N/A'}
+          </Text>
+          <Text style={textStyle}>
+            Venue: {item._embedded?.venues[0]?.name || 'N/A'}
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 };
 
@@ -63,7 +102,6 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 8,
-    padding: 16,
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: {
@@ -73,6 +111,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.23,
     shadowRadius: 2.62,
     elevation: 4,
+    overflow: 'hidden',
+  },
+  cardImage: {
+    width: '100%',
+    height: 180,
+  },
+  cardContent: {
+    padding: 16,
+    textAlign: 'left',
   },
   cardTitle: {
     fontSize: 18,
