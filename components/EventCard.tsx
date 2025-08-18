@@ -14,6 +14,7 @@ import {useNavigation} from '@react-navigation/native';
 export type Event = {
   id: string;
   name: string;
+  url: string;
   images?: {
     url: string;
     ratio?: string;
@@ -31,7 +32,8 @@ export type Event = {
 };
 
 const EventCard = ({item}: {item: Event}) => {
-  const isDarkMode = useColorScheme() === 'dark';
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === 'dark';
   const navigation = useNavigation();
   const cardStyle = {
     backgroundColor: isDarkMode ? Colors.dark : Colors.white,

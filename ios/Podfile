@@ -56,4 +56,6 @@ target 'citypulse' do
       :mac_catalyst_enabled => false
     )
   end
+
+  pod 'React-RCTAppDelegate', :path => '../node_modules/react-native/Libraries/AppDelegate'
 end

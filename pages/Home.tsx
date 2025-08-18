@@ -10,56 +10,37 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
+
 import EventsList from '../components/EventsList';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Colors as ColorThemes} from '../constants/colors';
+import {useAsyncStorageContext} from '../context/AsyncStorage';
+import {useDebounce} from '../hooks/debounce';
 
-const API_KEY = 'gcsYbSYzfVJvD4LAFevXycQG0Abh7a1k'; // Please replace with your Ticketmaster API key
-
-// Custom Debounce Hook
-function useDebounce(value, delay) {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
+const API_KEY = 'gcsYbSYzfVJvD4LAFevXycQG0Abh7a1k';
 
 const Home = () => {
-  const isDarkMode = useColorScheme() === 'dark';
-  const [searchQuery, setSearchQuery] = useState('');
+  const colorScheme = useColorScheme();
+  const theme = ColorThemes[colorScheme ?? 'light'];
+  const isDarkMode = colorScheme === 'dark';
+  const {searchQuery, setSearchQuery} = useAsyncStorageContext();
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+    backgroundColor: theme.background,
   };
-
-  useEffect(() => {
-    const loadSearchQuery = async () => {
-      const savedQuery = await AsyncStorage.getItem('searchQuery');
-      if (savedQuery) {
-        setSearchQuery(savedQuery);
-      }
-    };
-    loadSearchQuery();
-  }, []);
+  const textStyle = {
+    color: theme.text,
+    borderColor: theme.border,
+    backgroundColor: theme.inputBackground,
+  };
 
   useEffect(() => {
     const fetchEvents = async (query: string) => {
       if (query.length > 2) {
         setIsLoading(true);
         try {
-          await AsyncStorage.setItem('searchQuery', query);
           const response = await fetch(
             `https://app.ticketmaster.com/discovery/v2/events.json?keyword=${query}&apikey=${API_KEY}`,
           );
@@ -111,7 +92,7 @@ const Home = () => {
       {renderContent()}
       <View style={styles.searchSection}>
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, textStyle]}
           placeholder="Search events..."
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -130,7 +111,6 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     height: 44,
-    borderColor: 'gray',
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
@@ -161,9 +141,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     padding: 20,
-  },
-  listContainer: {
-    paddingHorizontal: 16,
   },
   card: {
     borderRadius: 8,

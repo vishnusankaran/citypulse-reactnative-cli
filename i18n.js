@@ -21,12 +21,14 @@ const resources = {
     translation: {
       Home: 'Home',
       Profile: 'Profile',
+      SwitchTo: 'التبديل إلى',
     },
   },
   ar: {
     translation: {
       Home: 'الرئيسية',
       Profile: 'الملف الشخصي',
+      SwitchTo: 'Switch to',
     },
   },
 };

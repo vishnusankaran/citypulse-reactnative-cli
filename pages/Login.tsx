@@ -10,8 +10,8 @@ import {
   Alert,
 } from 'react-native';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
-import auth from '@react-native-firebase/auth';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import auth from '@react-native-firebase/auth';
 
 const Login = () => {
   const isDarkMode = useColorScheme() === 'dark';
@@ -24,16 +24,12 @@ const Login = () => {
 
   const signInWithGoogle = async () => {
     try {
-      // Check if your device supports Google Play
       await GoogleSignin.hasPlayServices({showPlayServicesUpdateDialog: true});
 
-      // Get the users ID token
       const {idToken} = await GoogleSignin.signIn();
 
-      // Create a Google credential with the token
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
 
-      // Sign-in the user with the credential
       await auth().signInWithCredential(googleCredential);
       console.log('User signed in with Google');
     } catch (error: Error | any) {
@@ -53,9 +49,6 @@ const Login = () => {
         <TouchableOpacity style={styles.button} onPress={signInWithGoogle}>
           <Text style={styles.buttonText}>Sign in with Google</Text>
         </TouchableOpacity>
-        {/* <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Sign in with Apple</Text>
-        </TouchableOpacity> */}
       </View>
     </SafeAreaView>
   );

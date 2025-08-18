@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -12,26 +12,12 @@ import {
 } from 'react-native';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import auth from '@react-native-firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useFocusEffect} from '@react-navigation/native';
-import {type Event} from '../components/EventCard';
 import EventsList from '../components/EventsList';
+import {useAsyncStorageContext} from '../context/AsyncStorage';
 
 const Profile = () => {
   const isDarkMode = useColorScheme() === 'dark';
-  const [favorites, setFavorites] = useState<Event[]>([]);
-
-  useFocusEffect(
-    useCallback(() => {
-      const getFavorites = async () => {
-        const favoritesFromStorage = await AsyncStorage.getItem('favorites');
-        if (favoritesFromStorage) {
-          setFavorites(JSON.parse(favoritesFromStorage));
-        }
-      };
-      getFavorites();
-    }, []),
-  );
+  const {favorites} = useAsyncStorageContext();
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
